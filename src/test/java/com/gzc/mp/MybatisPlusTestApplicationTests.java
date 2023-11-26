@@ -2,20 +2,27 @@ package com.gzc.mp;
 
 import com.baomidou.mybatisplus.core.conditions.AbstractWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gzc.mp.mapper.UserMapper;
 import com.gzc.mp.pojo.User;
+import com.gzc.mp.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 @SpringBootTest
 class MybatisPlusTestApplicationTests {
 
     @Autowired
+    @Resource
     private UserMapper userMapper;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 使用mp步骤
@@ -31,6 +38,22 @@ class MybatisPlusTestApplicationTests {
         for (User user : users) {
             System.out.println("user = " + user);
         }
+    }
+
+    //测试mp自动生成的Service中的方法
+    /*
+    步骤
+    1,新建一个Service接口继承IService<POJO>接口
+    2,新建一个实现类实现刚才的接口同时继承ServiceImpl<POJOMapper,POJO>类
+    3,如果想要自定义方法,自定义即可,注意ServiceImpl已经写好了自动注入的对象
+     */
+    @Test
+    public void testService(){
+        QueryWrapper<User> objectQueryWrapper = new QueryWrapper<>();
+        objectQueryWrapper.eq("age",18);
+        User one = userService.getOne(objectQueryWrapper);
+        System.out.println("one = " + one);
+
     }
 
     //增:默认情况下,mp会通过雪花算法生成一个19位的数值类型的递增的唯一标识符作为id值
@@ -149,7 +172,7 @@ class MybatisPlusTestApplicationTests {
 //        System.out.println("是否有上一页 = " + userPage.hasPrevious());
 //        System.out.println("是否有下一页 = " + userPage.hasNext());
 
-///////////////////////使用Wrapper来查询////////////////////////////////////////
+///////////////////////使用Wrapper来查询///////////////////////////////////////////////
         QueryWrapper<User> queryWrapper = new QueryWrapper();
 //        queryWrapper.eq("age",18);//等于
 
@@ -164,16 +187,38 @@ class MybatisPlusTestApplicationTests {
 
 //        queryWrapper.likeRight("name","J");//模糊查询,like、notLike、likeLeft、likeRight
 
+//        queryWrapper.inSql("id","select id from db_user where id < 23");
+
+//        queryWrapper.eq("age",23);
+
+//        queryWrapper.select("name");
+
+//        queryWrapper.eq("age","18").or().eq("name","Jone");
+
+        queryWrapper.lt("age",50);//查询年龄小于50岁的
+        queryWrapper.orderByDesc("age","id");//降序,先按第一个,相同再按第二个
+
 
         List<User> users = userMapper.selectList(queryWrapper);//当查询结果多条时使用selectOne,会报错
         for (User user : users) {
             System.out.println("user = " + user);
         }
         //使用Wrapper来统计
-        Integer integer = userMapper.selectCount(queryWrapper);
-        System.out.println("integer = " + integer);
+//        Integer integer = userMapper.selectCount(queryWrapper);
+//        System.out.println("integer = " + integer);
     }
 
+    @Test
+    public void testUpdateWrapper(){
+///////////////////////////////////////使用Wrapper来修改////////////////////////////////////
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper();
+
+        updateWrapper.eq("age",23);
+        updateWrapper.set("name","你好啊");
+
+        int update = userMapper.update(new User(),updateWrapper);
+        System.out.println("update = " + update);
+    }
 
 
 }
